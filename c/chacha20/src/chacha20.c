@@ -80,9 +80,14 @@ static void generate_keystream(uint8_t keystream[64], uint8_t key[32],
     }
 }
 
-void chacha20_apply(uint8_t key[32], uint8_t nonce[12], uint8_t counter[4],
-                    uint8_t *data, size_t data_length)
+int chacha20_apply(uint8_t key[32], uint8_t nonce[12], uint8_t counter[4],
+                   uint8_t *data, size_t data_length)
 {
+    /* 2^32 blocks * 64 bytes/block = 274877906944 bytes */
+    if (data_length > 274877906944ull) {
+        return 1; 
+    }
+
     uint8_t keystream[64];
     uint32_t count = be_to_le(counter[3], counter[2], counter[1], counter[0]);
     size_t full_blocks_no = data_length / 64;
@@ -102,4 +107,6 @@ void chacha20_apply(uint8_t key[32], uint8_t nonce[12], uint8_t counter[4],
             data[full_blocks_no * 64 + j] ^= keystream[j];
         }
     }
+
+    return 0
 }

@@ -12,9 +12,10 @@
  * @param counter     The 4-byte initial counter.
  * @param data        Pointer to data buffer.
  * @param data_length Length of the data to process in bytes.
+ * @return            0 if successful 1 if bad data_length is given.
  */
-void chacha20_apply(uint8_t key[32], uint8_t nonce[12], uint8_t counter[4],
-                    uint8_t *data, size_t data_length);
+int chacha20_apply(uint8_t key[32], uint8_t nonce[12], uint8_t counter[4],
+                   uint8_t *data, size_t data_length);
 
 /**
  * @brief Converts four bytes into a 32-bit little-endian word.
