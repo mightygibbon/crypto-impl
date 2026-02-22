@@ -1,23 +1,24 @@
+# Compiler and flags
 CC ?= gcc
 CFLAGS ?= -Wall -Wextra -O3 -std=c11 -MMD -MP -I include
+
+# Targets and directories
 TARGET = chacha20.elf
 SRCS_DIR = src
 BUILD_DIR = build
-SRCS = main.c chacha20.c utils.c
+
+# Sources and dependencies
+SRCS = main.c chacha20.c
 OBJS := $(SRCS:%.c=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
--include $DEPS
-
-TEST_KEY = 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
-TEST_NON = 000000000000004a00000000
-TEST_CTR = 01000000
-TEST_PTX = 4c616469657320616e642047656e746c656d656e206f662074686520636c617373206f66202739393a204966204920636f756c64206f6666657220796f75206f6e6c79206f6e652074697020666f7220746865206675747572652c2073756e73637265656e20776f756c642062652069742e
+-include $(DEPS)
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^
 
+# Object compilation
 $(BUILD_DIR)/%.o: $(SRCS_DIR)/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
@@ -28,6 +29,6 @@ clean:
 	rm -rf $(BUILD_DIR) $(TARGET)
  
 test: $(TARGET)
-	./$(TARGET) $(TEST_KEY) $(TEST_NON) $(TEST_CTR) $(TEST_PTX)
+	./$(TARGET)
 
 .PHONY: all clean test
