@@ -236,7 +236,7 @@ bigint_t bigint_from_dec(const char *dec) {
             carry = res >> 32;
         }
 
-        /* If an overflow of the current limb size occured, expand bignum. */
+        /* If an overflow of the current limb size occurred, expand bignum. */
         if (carry > 0) {
             bignum.limbs[bignum.size] = (uint32_t)carry;
             bignum.size++;
@@ -450,7 +450,7 @@ int bigint_sub_abs(bigint_t *dest, const bigint_t *a, const bigint_t *b)
 
 int bigint_mul_abs(bigint_t *dest, const bigint_t *a, const bigint_t *b)
 {
-    /* Multiplcation by 0 case. */
+    /* Multiplication by 0 case. */
     if (a->sign == 0 || b->sign == 0) {
         bigint_free(dest);
         *dest = bigint_alloc(0, 0);
