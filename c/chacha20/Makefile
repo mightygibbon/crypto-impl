@@ -8,7 +8,7 @@ SRCS_DIR = src
 BUILD_DIR = build
 
 # Sources and dependencies
-SRCS = main.c chacha20.c poly1305.c bigint.c
+SRCS = main.c chacha20.c poly1305.c chacha20_poly1305.c bigint.c
 OBJS = $(addprefix $(BUILD_DIR)/, $(SRCS:.c=.o))
 DEPS = $(OBJS:.o=.d)
 

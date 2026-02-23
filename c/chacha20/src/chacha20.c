@@ -9,8 +9,8 @@
  * @param nonce   The 12-byte nonce.
  * @param counter The 4-byte counter word.
  */
-static void init_state(uint32_t state[16], uint8_t key[32], uint8_t nonce[12],
-                       uint32_t counter)
+static void init_state(uint32_t state[16], const uint8_t key[32],
+                       const uint8_t nonce[12], uint32_t counter)
 {
     /* RFC 8439 Constants */
     state[0] = 0x61707865;
@@ -37,16 +37,8 @@ static void init_state(uint32_t state[16], uint8_t key[32], uint8_t nonce[12],
     state[15] = be_to_le(nonce[8], nonce[9], nonce[10], nonce[11]);
 }
 
-/**
- * @brief Generates a 64-byte keystream for the current counter.
- * 
- * @param keystream The 64-byte keystream.
- * @param key       The 32-byte key.
- * @param nonce     The 12-byte nonce.
- * @param counter   The 4-byte counter word.
- */
-static void generate_keystream(uint8_t keystream[64], uint8_t key[32],
-                               uint8_t nonce[12], uint32_t counter)
+int chacha20_block(const uint8_t key[32], uint32_t counter,
+                   const uint8_t nonce[12], uint8_t keystream[64])
 {
     uint32_t state[16];
     uint32_t w_state[16];
@@ -78,10 +70,13 @@ static void generate_keystream(uint8_t keystream[64], uint8_t key[32],
         keystream[i * 4 + 2] = (final_word >> 16) & 0xff;
         keystream[i * 4 + 3] = (final_word >> 24) & 0xff;
     }
+
+    return 0;
 }
 
-int chacha20_apply(uint8_t key[32], uint8_t nonce[12], uint8_t counter[4],
-                   uint8_t *data, size_t data_length)
+int chacha20_apply(const uint8_t key[32], uint32_t counter,
+                   const uint8_t nonce[12], const uint8_t *data_in,
+                   size_t data_length, uint8_t *data_out)
 {
     /* 2^32 blocks * 64 bytes/block = 274877906944 bytes */
     if (data_length > 274877906944ull) {
@@ -89,22 +84,21 @@ int chacha20_apply(uint8_t key[32], uint8_t nonce[12], uint8_t counter[4],
     }
 
     uint8_t keystream[64];
-    uint32_t count = be_to_le(counter[3], counter[2], counter[1], counter[0]);
     size_t full_blocks_no = data_length / 64;
     size_t remaining = data_length % 64;
 
     for (size_t i = 0; i < full_blocks_no; i++) {
-        generate_keystream(keystream, key, nonce, count);
+        chacha20_block(key, counter, nonce, keystream);
         for (size_t j = 0; j < 64; j++) {
-            data[i * 64 + j] ^= keystream[j];
+            data_out[i * 64 + j] = data_in[i * 64 + j] ^ keystream[j];
         }
-        count += 1;
+        counter += 1;
     }
 
     if (remaining) {
-        generate_keystream(keystream, key, nonce, count);
+        chacha20_block(key, counter, nonce, keystream);
         for (size_t i = 0; i < remaining; i++) {
-            data[full_blocks_no * 64 + i] ^= keystream[i];
+            data_out[full_blocks_no * 64 + i] = data_in[full_blocks_no * 64 + i] ^ keystream[i];
         }
     }
 

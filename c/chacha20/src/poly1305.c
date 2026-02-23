@@ -3,8 +3,10 @@
 #include <stddef.h>
 #include <stdio.h>
 #include "bigint.h"
+#include "chacha20.h"
 
-int poly1305_mac(uint8_t key[32], uint8_t *msg, size_t msg_len, uint8_t tag[16])
+int poly1305_mac(const uint8_t key[32], const uint8_t *msg, size_t msg_len,
+                 uint8_t tag[16])
 {
     /* Creation of (r, s). */
     uint8_t r[16];
@@ -63,6 +65,20 @@ int poly1305_mac(uint8_t key[32], uint8_t *msg, size_t msg_len, uint8_t tag[16])
     bigint_free(&s_num);
     bigint_free(&acc);
     bigint_free(&P);
+
+    return 0;
+}
+
+int poly1305_key_gen(const uint8_t chacha_key[32], const uint8_t nonce[12],
+                     uint8_t poly_key[32])
+{
+    uint8_t keystream[64];
+
+    chacha20_block(chacha_key, 0, nonce, keystream);
+
+    for (int i = 0; i < 32; i++) {
+        poly_key[i] = keystream[i];
+    }
 
     return 0;
 }

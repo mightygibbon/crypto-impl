@@ -5,26 +5,40 @@
 #include <stddef.h>
 
 /**
- * @brief chacha20_applys or decrypts data using the ChaCha20 stream cipher.
- * 
- * @param key         The 32-byte key.
- * @param nonce       The 12-byte nonce.
- * @param counter     The 4-byte initial counter.
- * @param data        Pointer to data buffer.
- * @param data_length Length of the data to process in bytes.
- * @return            0 if successful 1 if bad data_length is given.
+ * @brief Generates a 64-byte keystream block for a given key, counter, and nonce.
+ *  
+ * @param[in]  key       The 32-byte (256-bit) symmetric key.
+ * @param[in]  counter   The 32-bit block counter.
+ * @param[in]  nonce     The 12-byte (96-bit) nonce.
+ * @param[out] keystream The output buffer to receive the 64-byte keystream.
+ * @return               0 on success, non-zero on failure.
  */
-int chacha20_apply(uint8_t key[32], uint8_t nonce[12], uint8_t counter[4],
-                   uint8_t *data, size_t data_length);
+int chacha20_block(const uint8_t key[32], uint32_t counter,
+                   const uint8_t nonce[12], uint8_t keystream[64]);
 
 /**
- * @brief Converts four bytes into a 32-bit little-endian word.
+ * @brief Encrypts or decrypts data in place using the ChaCha20 stream cipher.
  * 
- * @param b3 The most significant byte.
- * @param b2 The third byte.
- * @param b1 The second byte.
- * @param b0 The least significant byte.
- * @return   The composed 32-bit unsigned integer.
+ * @param[in]     key         The 32-byte (256-bit) symmetric key.
+ * @param[in]     counter     The 4-byte (16-bit) counter.
+ * @param[in]     nonce       The 12-byte (96-bit) nonce.
+ * @param[in]     data_in     Pointer to the data buffer to encrypt/decrypt.
+ * @param[in]     data_length The length of the data buffer in bytes.
+ * @param[out]    data_out    Pointer to the result obtained after the application.
+ * @return                    0 on success, 1 if an invalid data_length is provided.
+ */
+int chacha20_apply(const uint8_t key[32], uint32_t counter,
+                   const uint8_t nonce[12], const uint8_t *data_in,
+                   size_t data_length, uint8_t *data_out);
+
+/**
+ * @brief Packs four individual bytes into a 32-bit little-endian word.
+ * 
+ * @param[in] b3 The most significant byte (byte 3).
+ * @param[in] b2 The third byte (byte 2).
+ * @param[in] b1 The second byte (byte 1).
+ * @param[in] b0 The least significant byte (byte 0).
+ * @return       The composed 32-bit unsigned integer.
  */
 static inline uint32_t be_to_le(uint32_t b3, uint32_t b2, uint32_t b1,
                                 uint32_t b0)
@@ -36,9 +50,9 @@ static inline uint32_t be_to_le(uint32_t b3, uint32_t b2, uint32_t b1,
 /**
  * @brief Performs a bitwise circular left rotation.
  * 
- * @param word  The 32-bit integer to rotate.
- * @param shift The number of bit positions to rotate left.
- * @return      The rotated 32-bit integer.
+ * @param[in] word  The 32-bit integer to rotate.
+ * @param[in] shift The number of bit positions to rotate left.
+ * @return          The rotated 32-bit integer.
  */
 static inline uint32_t rotl(uint32_t word, uint8_t shift)
 {
@@ -46,12 +60,12 @@ static inline uint32_t rotl(uint32_t word, uint8_t shift)
 }
 
 /**
- * @brief Performs ChaCha20 quarter round on four state words.
+ * @brief Performs the ChaCha20 quarter round operation on four state words.
  * 
- * @param a Pointer to the first state word.
- * @param b Pointer to the second state word.
- * @param c Pointer to the third state word.
- * @param d Pointer to the fourth state word.
+ * @param[in,out] a Pointer to the first state word.
+ * @param[in,out] b Pointer to the second state word.
+ * @param[in,out] c Pointer to the third state word.
+ * @param[in,out] d Pointer to the fourth state word.
  */
 static inline void quarter_round(uint32_t *a, uint32_t *b, uint32_t *c,
                                  uint32_t *d)
