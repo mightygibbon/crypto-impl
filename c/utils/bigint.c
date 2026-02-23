@@ -90,7 +90,7 @@ bigint_t bigint_from_le_bytes(int8_t sign, size_t num_bytes, const uint8_t *byte
 
     /* Little-Endian arrays have the least significant byte at index 0.
      * Forward iteration, mapping directly to the Little-Endian limbs. */
-    for (int i = 0; i < num_bytes; i++) {
+    for (size_t i = 0; i < num_bytes; i++) {
         bignum.limbs[limb_index] |= ((uint32_t)bytes[i] << bit_shift);
         bit_shift += 8;
         
@@ -121,7 +121,7 @@ bigint_t bigint_from_be_hex(int8_t sign, const char *hex)
     int bit_shift = 0;
 
     /* The hex string is read from right to left */
-    for (size_t i = hex_len; i > 0; i -= 2) {
+    for (int i = (int)hex_len; i > 0; i -= 2) {
         int low_nibble = hex_char_to_int(hex[i - 1]);
         int high_nibble = (i - 1 > 0) ? hex_char_to_int(hex[i - 2]) : 0;
 
@@ -260,6 +260,43 @@ bigint_t bigint_from_dec(const char *dec) {
     return bignum;
 }
 
+void bigint_to_be_bytes(const bigint_t *a, uint8_t *out, size_t out_len)
+{
+    if (!out) {
+        return;
+    }
+
+    for (size_t i = 0; i < out_len; i++) {
+        size_t limb_idx = i / 4;
+        size_t bit_shift = (i % 4) * 8;
+        size_t byte_idx = out_len - 1 - i;
+
+        if (a != NULL && limb_idx < a->size) {
+            out[byte_idx] = (uint8_t)((a->limbs[limb_idx] >> bit_shift) & 0xFF);
+        } else {
+            out[byte_idx] = 0x00; /* Zero-pad if out_len exceeds a byte length. */
+        }
+    }
+}
+
+void bigint_to_le_bytes(const bigint_t *a, uint8_t *out, size_t out_len)
+{
+    if (!out) {
+        return;
+    }
+
+    for (size_t i = 0; i < out_len; i++) {
+        size_t limb_idx = i / 4;
+        size_t bit_shift = (i % 4) * 8;
+
+        if (a != NULL && limb_idx < a->size) {
+            out[i] = (uint8_t)((a->limbs[limb_idx] >> bit_shift) & 0xFF);
+        } else {
+            out[i] = 0x00; /* Zero-pad if out_len exceeds a byte length. */
+        }
+    }
+}
+
 int bigint_copy(bigint_t *dest, const bigint_t *src) 
 {
     /* If the source is zero, just allocate a zeroed destination and return. */
@@ -283,6 +320,28 @@ int bigint_copy(bigint_t *dest, const bigint_t *src)
     *dest = temp;
 
     return 0;
+}
+
+size_t bigint_size_bytes(const bigint_t *a)
+{
+    if (a == NULL || a->size == 0 || a->sign == 0) {
+        return 0;
+    }
+
+    size_t bytes = (a->size - 1) * 4;
+
+    uint32_t msl = a->limbs[a->size - 1];
+    if (msl >= 0x01000000) {
+        bytes += 4;
+    } else if (msl >= 0x00010000) {
+        bytes += 3;
+    } else if (msl >= 0x00000100) {
+        bytes += 2;
+    } else {
+        bytes += 1;
+    }
+
+    return bytes;
 }
 
 int bigint_cmp_abs(const bigint_t *a, const bigint_t *b)

@@ -103,10 +103,10 @@ int chacha20_apply(uint8_t key[32], uint8_t nonce[12], uint8_t counter[4],
 
     if (remaining) {
         generate_keystream(keystream, key, nonce, count);
-        for (size_t j = 0; j < remaining; j++) {
-            data[full_blocks_no * 64 + j] ^= keystream[j];
+        for (size_t i = 0; i < remaining; i++) {
+            data[full_blocks_no * 64 + i] ^= keystream[i];
         }
     }
 
-    return 0
+    return 0;
 }

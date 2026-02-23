@@ -84,6 +84,24 @@ bigint_t bigint_from_le_hex(int8_t sign, const char *hex);
  */
 bigint_t bigint_from_dec(const char *dec);
 
+/**
+ * @brief Exports a bigint_t to a Big-Endian byte array.
+ * 
+ * @param a Pointer to the source bigint_t.
+ * @param out Pointer to the destination byte array.
+ * @param out_len The requested size of the output in bytes.
+ */
+void bigint_to_be_bytes(const bigint_t *a, uint8_t *out, size_t out_len);
+
+/**
+ * @brief Exports a bigint_t to a Little-Endian byte array.
+ *
+ * @param a Pointer to the source bigint_t.
+ * @param out Pointer to the destination byte array.
+ * @param out_len The requested size of the output in bytes.
+ */
+void bigint_to_le_bytes(const bigint_t *a, uint8_t *out, size_t out_len);
+
 /* Utility Operations */
 
 /**
@@ -94,6 +112,15 @@ bigint_t bigint_from_dec(const char *dec);
  * @return 0 on success, non-zero on allocation failure.
  */
 int bigint_copy(bigint_t *dest, const bigint_t *src);
+
+/**
+ * @brief Calculates the exact minimum number of bytes required to represent
+ * the absolute value of the bigint.
+ *
+ * @param a Pointer to the bigint_t.
+ * @return The number of bytes. Returns 0 if the number is zero.
+ */
+size_t bigint_size_bytes(const bigint_t *a);
 
 /* Absolute Value Operations */
 
